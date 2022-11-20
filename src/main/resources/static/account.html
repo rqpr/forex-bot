@@ -3,14 +3,15 @@
     <head>
         <meta charset="UTF-8">
         <title>仓位计算</title>
-        <script src="/js/echarts.min.js"></script>
-        <script src="/js/jquery.min.js"></script>
-        <script src="/js/amount.js"></script>
+        <script src="./js/echarts.min.js"></script>
+        <script src="./js/jquery.min.js"></script>
+        <script src="./js/amount.js"></script>
         <style type="text/css">
             .input {
                 width: 100%;
                 float: left;
             }
+
             .input div {
                 float: left;
                 width: 100px;
@@ -60,7 +61,7 @@
         <div class="input"><div><button type="button" onclick="myFunction2()">试一试</button></div></div>
         <div class="input"><div>手数: </div><div><div id="lot1"></div></div><div>Lot</div></div>
 
-        <h1>总盈亏 </h1>
+        <h1>总盈亏</h1>
         <h4>胜率 盈利次数 / 亏损次数</h4>
         <h4>盈亏比 盈利金额 / 亏损金额</h4>
         <h4>总盈亏 盈利次数 * 盈利 - 亏损次数*亏损金额</h4>
@@ -123,7 +124,7 @@
             type : "GET",
             //异步请求（同步请求将会锁住浏览器，用户其他操作必须等待请求完成才可以执行）
 <!--            async : true,            -->
-            url : "/amount/amountline",
+            url : "./amount/amountline",
             data : {},
             dataType : "json",
             success : function(result) {

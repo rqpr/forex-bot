@@ -22,6 +22,13 @@ public class AmountController {
     @Autowired
     private AmountServices amountServices;
 
+    /**
+     * @Author 1
+     * @Version  1.0
+     * @Description
+     * @param amountVo
+     * @Date 2022-11-20 10:45
+     */
     @RequestMapping(value = "/amountline", method = RequestMethod.GET)
     @ResponseBody
     public RespBean test(){

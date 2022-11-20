@@ -19,20 +19,20 @@ public class RespBean {
 
     //成功返回结果
     public static RespBean success(){
-        return new RespBean(RespBeanEnum.SUCCESS.getCode(),RespBeanEnum.SUCCESS.getMessge(),null);
+        return new RespBean(RespBeanEnum.SUCCESS.getCode(),RespBeanEnum.SUCCESS.getMessage(),null);
     }
 
     public static RespBean success(Object o){
-        return new RespBean(RespBeanEnum.SUCCESS.getCode(),RespBeanEnum.SUCCESS.getMessge(),o);
+        return new RespBean(RespBeanEnum.SUCCESS.getCode(),RespBeanEnum.SUCCESS.getMessage(),o);
     }
 
     //失败 成功只有一种200 失败有500 404
     public static RespBean error(RespBeanEnum respBeanEnum){
-        return new RespBean(respBeanEnum.getCode(),respBeanEnum.getMessge(),null);
+        return new RespBean(respBeanEnum.getCode(),respBeanEnum.getMessage(),null);
     }
 
     public static RespBean error(RespBeanEnum respBeanEnum,Object o){
-        return new RespBean(respBeanEnum.getCode(),respBeanEnum.getMessge(),o);
+        return new RespBean(respBeanEnum.getCode(),respBeanEnum.getMessage(),o);
     }
 
 }
