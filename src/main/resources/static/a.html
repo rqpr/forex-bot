@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>仓位计算</title>
+        <script src="/js/echarts.min.js"></script>
+        <script src="/js/jquery.min.js"></script>
+        <script src="/js/amount.js"></script>
+        <style type="text/css">
+            .input {
+                width: 100%;
+                float: left;
+            }
+            .input div {
+                float: left;
+                width: 100px;
+                height: 30px;
+                text-align: center;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="main" style="width: 600px;height:400px;"></div>
+        <div id="main1" style="width: 600px;height:400px;"></div>
+        <h1>加止损固定百分比模型</h1>
+        <div class="input"><div>杠杆倍数: </div>
+            <div>
+                <select id="lever">
+                    <option value="1">1</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                    <option value="200">200</option>
+                    <option value="300">300</option>
+                    <option value="400" selected="selected">400</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="input"><div>品种: </div>
+            <div>
+                <select id="currency">
+                    <option value="USD">货币对</option>
+                    <option value="JAPAN">货币对日元</option>
+                    <option value="GOLD">黄金</option>
+                    <option value="OIL">原油</option>
+                    <option value="INDEX">股指</option>
+                </select>
+            </div>
+        </div>
+        <div class="input"><div>账户净值: </div><div><input type="text" id="money" value="150"/></div><div>USD</div></div>
+        <div class="input"><div>风险控制: </div><div><input type="text" id="risk" value="1"/></div><div>%</div></div>
+        <div class="input"><div>止损点数量: </div><div><input type="text" id="lose" value="23"/></div><div>Pips</div></div>
+        <div class="input"><div>点差: </div><div><input type="text" id="pips" value="2"/></div><div>Pips</div></div>
+        <!-- <div class="input"><div>点值: </div><div><div id="pips1"></div></div><div>USD</div></div>   -->
+        <div class="input"><div><button type="button" onclick="myFunction()">试一试</button></div></div>
+        <div class="input"><div>手数: </div><div><div id="lot"></div></div><div>Lot</div></div>
+        <div class="input"><div>保证金: </div><div id="insure"></div><div>USD</div></div>
+
+        <h1>固定百分比风险模型 本金*风险百分比*杠杆倍数/一标准手</h1>
+        <div class="input"><div><button type="button" onclick="myFunction2()">试一试</button></div></div>
+        <div class="input"><div>手数: </div><div><div id="lot1"></div></div><div>Lot</div></div>
+
+        <h1>总盈亏 </h1>
+        <h4>胜率 盈利次数 / 亏损次数</h4>
+        <h4>盈亏比 盈利金额 / 亏损金额</h4>
+        <h4>总盈亏 盈利次数 * 盈利 - 亏损次数*亏损金额</h4>
+
+        <h4>凯利公式</h4>
+        <h4>胜率P-盈亏比R/1-胜率P = Q用多少净值百分比做冒险</h4>
+    </body>
+
+    <script type="text/javascript">
+        var myChart = echarts.init(document.getElementById('main'));
+        // 指定图表的配置项和数据
+        myChart.setOption({
+             title: {
+                 text: '资金净值曲线,不注意止损'
+             },
+             tooltip: {},
+             legend: {
+                 data:['销量']
+             },
+             xAxis: {
+                 data: []
+             },
+             yAxis: {},
+             series: [{
+                 name: '销量',
+                 type: 'line',
+                 data: []
+             }]
+        });
+        myChart.showLoading();    //数据加载完之前先显示一段简单的loading动画
+        var date=[];    //类别数组（实际用来盛放X轴坐标值）
+        var nums=[];    //销量数组（实际用来盛放Y坐标值）
+
+
+        var myChart1 = echarts.init(document.getElementById('main1'));
+        // 指定图表的配置项和数据
+        myChart1.setOption({
+             title: {
+                 text: '资金净值曲线,止损控制在1%的情况下'
+             },
+             tooltip: {},
+             legend: {
+                 data:['销量']
+             },
+             xAxis: {
+                 data: []
+             },
+             yAxis: {},
+             series: [{
+                 name: '销量',
+                 type: 'line',
+                 data: []
+             }]
+        });
+        myChart1.showLoading();    //数据加载完之前先显示一段简单的loading动画
+        var date1=[];    //类别数组（实际用来盛放X轴坐标值）
+        var nums1=[];    //销量数组（实际用来盛放Y坐标值）
+
+        $.ajax({
+            type : "GET",
+            //异步请求（同步请求将会锁住浏览器，用户其他操作必须等待请求完成才可以执行）
+<!--            async : true,            -->
+            url : "/amount/amountline",
+            data : {},
+            dataType : "json",
+            success : function(result) {
+                if(result.code==200){
+                    var path = result.object;
+                    for(var i=0;i<path.dateList.length;i++){
+                        //挨个取出类别并填入类别数组
+                        date.push(path.dateList[i]);
+                    }
+                    for(var i=0;i<path.amountList.length;i++){
+                        //挨个取出销量并填入销量数组
+                        nums.push(path.amountList[i]);
+                    }
+                    for(var i=0;i<path.dateList1.length;i++){
+                        //挨个取出类别并填入类别数组
+                        date1.push(path.dateList1[i]);
+                    }
+                    for(var i=0;i<path.amountList1.length;i++){
+                        //挨个取出销量并填入销量数组
+                        nums1.push(path.amountList1[i]);
+                    }
+                    //隐藏加载动画
+                    myChart.hideLoading();
+                    myChart1.hideLoading();
+                    //加载数据图表
+                    myChart.setOption({
+                        xAxis: {
+                            data: date
+                        },
+                        series: [{
+                            // 根据名字对应到相应的系列
+                            name: '账户净值',
+                            data: nums
+                        }]
+                    });
+                    myChart1.setOption({
+                        xAxis: {
+                            data: date1
+                        },
+                        series: [{
+                            // 根据名字对应到相应的系列
+                            name: '账户净值',
+                            data: nums1
+                        }]
+                    });
+                }else{
+                    console.log("result:"+result);
+                }
+            },
+            error : function(errorMsg) {
+                //请求失败时执行该函数
+                alert("图表请求数据失败!");
+                myChart.hideLoading();
+            }
+        })
+
+
+<!--        //热度-->
+<!--        var myChart2 = echarts.init(document.getElementById('main1'));-->
+<!--        var option1 = {-->
+<!--          series: [-->
+<!--            {-->
+<!--              type: 'gauge',-->
+<!--              center: ['50%', '60%'],-->
+<!--              startAngle: 200,-->
+<!--              endAngle: -20,-->
+<!--              min: 0,-->
+<!--              max: 60,-->
+<!--              splitNumber: 12,-->
+<!--              itemStyle: {-->
+<!--                color: '#FFAB91'-->
+<!--              },-->
+<!--              progress: {-->
+<!--                show: true,-->
+<!--                width: 30-->
+<!--              },-->
+<!--              pointer: {-->
+<!--                show: false-->
+<!--              },-->
+<!--              axisLine: {-->
+<!--                lineStyle: {-->
+<!--                  width: 30-->
+<!--                }-->
+<!--              },-->
+<!--              axisTick: {-->
+<!--                distance: -45,-->
+<!--                splitNumber: 5,-->
+<!--                lineStyle: {-->
+<!--                  width: 2,-->
+<!--                  color: '#999'-->
+<!--                }-->
+<!--              },-->
+<!--              splitLine: {-->
+<!--                distance: -52,-->
+<!--                length: 14,-->
+<!--                lineStyle: {-->
+<!--                  width: 3,-->
+<!--                  color: '#999'-->
+<!--                }-->
+<!--              },-->
+<!--              axisLabel: {-->
+<!--                distance: -20,-->
+<!--                color: '#999',-->
+<!--                fontSize: 20-->
+<!--              },-->
+<!--              anchor: {-->
+<!--                show: false-->
+<!--              },-->
+<!--              title: {-->
+<!--                show: false-->
+<!--              },-->
+<!--              detail: {-->
+<!--                valueAnimation: true,-->
+<!--                width: '60%',-->
+<!--                lineHeight: 40,-->
+<!--                borderRadius: 8,-->
+<!--                offsetCenter: [0, '-15%'],-->
+<!--                fontSize: 60,-->
+<!--                fontWeight: 'bolder',-->
+<!--                formatter: '{value} °C',-->
+<!--                color: 'auto'-->
+<!--              },-->
+<!--              data: [-->
+<!--                {-->
+<!--                  value: 20-->
+<!--                }-->
+<!--              ]-->
+<!--            },-->
+<!--            {-->
+<!--              type: 'gauge',-->
+<!--              center: ['50%', '60%'],-->
+<!--              startAngle: 200,-->
+<!--              endAngle: -20,-->
+<!--              min: 0,-->
+<!--              max: 60,-->
+<!--              itemStyle: {-->
+<!--                color: '#FD7347'-->
+<!--              },-->
+<!--              progress: {-->
+<!--                show: true,-->
+<!--                width: 8-->
+<!--              },-->
+<!--              pointer: {-->
+<!--                show: false-->
+<!--              },-->
+<!--              axisLine: {-->
+<!--                show: false-->
+<!--              },-->
+<!--              axisTick: {-->
+<!--                show: false-->
+<!--              },-->
+<!--              splitLine: {-->
+<!--                show: false-->
+<!--              },-->
+<!--              axisLabel: {-->
+<!--                show: false-->
+<!--              },-->
+<!--              detail: {-->
+<!--                show: false-->
+<!--              },-->
+<!--              data: [-->
+<!--                {-->
+<!--                  value: 20-->
+<!--                }-->
+<!--              ]-->
+<!--            }-->
+<!--          ]-->
+<!--        };-->
+<!--        setInterval(function () {-->
+<!--          const random = +(Math.random() * 60).toFixed(2);-->
+<!--          myChart2.setOption({-->
+<!--            series: [-->
+<!--              {-->
+<!--                data: [-->
+<!--                  {-->
+<!--                    value: random-->
+<!--                  }-->
+<!--                ]-->
+<!--              },-->
+<!--              {-->
+<!--                data: [-->
+<!--                  {-->
+<!--                    value: random-->
+<!--                  }-->
+<!--                ]-->
+<!--              }-->
+<!--            ]-->
+<!--          });-->
+<!--        }, 2000);-->
+<!--        option && myChart2.setOption(option1);-->
+    </script>
+</html>

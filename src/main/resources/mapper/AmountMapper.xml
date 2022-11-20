@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dpf.forex.mapper.AmountMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.dpf.forex.pojo.Amount">
+        <id column="id" property="id" />
+        <result column="date" property="date" />
+        <result column="amount" property="amount" />
+        <result column="code" property="code" />
+        <result column="variety" property="variety" />
+        <result column="stopProfit" property="stopProfit" />
+        <result column="stopLoss" property="stopLoss" />
+        <result column="number" property="number" />
+        <result column="direction" property="direction" />
+        <result column="openTime" property="openTime" />
+        <result column="closeTime" property="closeTime" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, date, amount，code，variety，stopProfit，stopLoss，number，direction，openTime，closeTime
+    </sql>
+
+	<select id="findAmount" resultMap="BaseResultMap">
+		select * from t_amount
+	</select>
+
+    <!-- 批量插入 -->
+    <insert id="insertAmount" parameterType="java.util.List">
+        insert into t_amount (date, amount, code, variety, stopProfit, stopLoss, number, direction, openTime, closeTime)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.date}, #{item.amount}, #{item.code}, #{item.variety}, #{item.stopProfit}, #{item.stopLoss}, #{item.number}, #{item.direction}, #{item.openTime}, #{item.closeTime})
+        </foreach>
+    </insert>
+
+</mapper>
