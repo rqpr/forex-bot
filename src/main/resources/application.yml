@@ -1,8 +1,8 @@
 server:
-  port: 80
+  port: 8021
   servlet:
-      # 访问路径
       context-path: /forex-bot
+
 spring:
 #  html乱码
   http:
@@ -10,9 +10,9 @@ spring:
       charset: UTF-8
       force: true
       enabled: true
-  #给项目来个名字
+  #项目名
   application:
-    name: forex
+    name: forex-bot
   #配置rabbitMq 服务器
 #  rabbitmq:
 #    host: 127.0.0.1
@@ -44,3 +44,24 @@ spring:
       connection-timeout: 3000
       # 测试连接是否可用
       connection-test-query: SELECT 1
+
+  redis:
+    # 服务器地址
+    host: 139.159.188.75
+    # 端口号
+    port: 6379
+    # 密码
+    password: 089916
+    # 数据库
+    database: 0
+    # 超时时间
+    timeout: 10000ms
+    lettuce:
+      pool:
+        # 最大连接数
+        max-active: 8
+        # 最大连接阻塞时间
+        max-wait: 10000ms
+        # 最大最小空闲连接
+        max-idle: 200
+        min-idle: 5

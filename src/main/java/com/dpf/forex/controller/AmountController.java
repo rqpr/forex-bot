@@ -1,9 +1,12 @@
 package com.dpf.forex.controller;
 
 
+import com.alibaba.fastjson.JSONObject;
 import com.dpf.forex.pojo.Amount;
 import com.dpf.forex.service.AmountServices;
+import com.dpf.forex.utils.RedisUtil;
 import com.dpf.forex.vo.AmountVo;
+import com.dpf.forex.vo.RedisKey;
 import com.dpf.forex.vo.RespBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -14,6 +17,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/amount")
@@ -21,6 +25,9 @@ public class AmountController {
 
     @Autowired
     private AmountServices amountServices;
+
+    @Autowired
+    private RedisUtil redisUtil;
 
     /**
      * @Author 1
@@ -32,8 +39,19 @@ public class AmountController {
     @RequestMapping(value = "/amountline", method = RequestMethod.GET)
     @ResponseBody
     public RespBean test(){
+        List<Amount> amountList = new ArrayList<>();
 
-        List<Amount> amount = amountServices.findAmount();
+        if (redisUtil.hasKey(RedisKey.AMOUNT)){
+            Map<Object, Object> objectObjectMap = redisUtil.hgetAll(RedisKey.AMOUNT);
+            for (Map.Entry<Object, Object> entry : objectObjectMap.entrySet()) {
+                amountList.add(JSONObject.parseObject(entry.getValue().toString(), Amount.class));
+            }
+        } else {
+            amountList = amountServices.findAmount();
+            for (Amount amount : amountList) {
+                redisUtil.hput(RedisKey.AMOUNT,amount.getCode(),amount);
+            }
+        }
 
         float total = 0;
         int time = 0;
@@ -45,14 +63,14 @@ public class AmountController {
         float losemoney = 0;
 
         List<Date> dateList = new ArrayList<>();
-        List<Float> amountList = new ArrayList<>();
+        List<Float> amount = new ArrayList<>();
 
-        for (Amount amount1 : amount) {
+        for (Amount amount1 : amountList) {
             // 总盈亏
             total += amount1.getAmount();
 
             dateList.add(amount1.getDate());
-            amountList.add(amount1.getAmount());
+            amount.add(amount1.getAmount());
 
             if(amount1.getAmount() > 0) {
                 time += 1;
@@ -84,12 +102,12 @@ public class AmountController {
         List<Date> dateList1 = new ArrayList<>();
         List<Float> amountList2 = new ArrayList<>();
         if (amountList.size() > 0) {
-            amountList2.add(amountList.get(0));
+            amountList2.add(amount.get(0));
             dateList1.add(dateList.get(0));
         }
-        float amount1 = amountList.get(0);
+        float amount1 = amount.get(0);
         for (int i = 1; i < dateList.size() - 2; i++) {
-            amount1 += amountList.get(i);
+            amount1 += amount.get(i);
             if (dateList1.get(dateList1.size()-1).equals(dateList.get(i))) {
                 amountList2.set(amountList2.size()-1, amount1);
             } else {
@@ -100,20 +118,20 @@ public class AmountController {
 
         // 每笔止损在1%
         for (int i = 0; i < amountList.size(); i++) {
-            if (amountList.get(i) < -1) {
-                amountList.set(i, (float)-1);
+            if (amount.get(i) < -1) {
+                amount.set(i, (float)-1);
             }
         }
         // 账户净值曲线
         List<Date> dateList2 = new ArrayList<>();
         List<Float> amountList3 = new ArrayList<>();
         if (amountList.size() > 0) {
-            amountList3.add(amountList.get(0));
+            amountList3.add(amount.get(0));
             dateList2.add(dateList.get(0));
         }
-        float amount2 = amountList.get(0);
+        float amount2 = amount.get(0);
         for (int i = 1; i < dateList.size() - 2; i++) {
-            amount2 += amountList.get(i);
+            amount2 += amount.get(i);
             if (dateList2.get(dateList2.size()-1).equals(dateList.get(i))) {
                 amountList3.set(amountList3.size()-1, amount2);
             } else {

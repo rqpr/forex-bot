@@ -9,12 +9,11 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * <p>
- *
- * </p>
- *
- * @author zhoubin
- * @since 2022-04-15
+ * @Author 1
+ * @Version  1.0
+ * @Description
+ * @param null
+ * @Date 2022-11-20 20:13
  */
 @Data
 @AllArgsConstructor
